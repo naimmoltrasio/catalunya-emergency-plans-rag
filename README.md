@@ -1,1 +1,1 @@
-# rag-contract-analyzer
+# catalunya-emergency-plans-rag
