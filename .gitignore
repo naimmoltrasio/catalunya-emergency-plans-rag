@@ -1,2 +1,17 @@
-# Virtual environment
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Environment
 venv/
+.env
+
+# Editor
+.vscode/
+
+# Vector store
+chroma_langchain_db/
+
+# System
+.DS_Store
