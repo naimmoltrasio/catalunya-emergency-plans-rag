@@ -4,6 +4,8 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 
+BATCH_SIZE = 20
+
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 
 db_location = "./chroma_langchain_db"
@@ -16,12 +18,15 @@ vector_store = Chroma(
 
 add_documents = vector_store._collection.count() == 0
 
-if add_documents:
-    # Carga todos los PDFs de la carpeta "assets"
-    loader = PyPDFDirectoryLoader("assets/")
-    raw_documents = loader.load()  # cada página del PDF = un Document
+def batch(iterable, size):
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]
 
-    # Chunking: divide el texto en fragmentos manejables con overlap
+
+if add_documents:
+    loader = PyPDFDirectoryLoader("assets/")
+    raw_documents = loader.load()
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
@@ -29,7 +34,9 @@ if add_documents:
     documents = text_splitter.split_documents(raw_documents)
     ids = [str(i) for i in range(len(documents))]
 
-    vector_store.add_documents(documents=documents, ids=ids)
+    for doc_batch, id_batch in zip(batch(documents, BATCH_SIZE), batch(ids, BATCH_SIZE)):
+        print(f"Indexando lote de {len(doc_batch)} chunks...")
+        vector_store.add_documents(documents=doc_batch, ids=id_batch)
 
 retriever = vector_store.as_retriever(
     search_kwargs={"k": 5}
