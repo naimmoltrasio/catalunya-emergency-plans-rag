@@ -12,6 +12,8 @@ venv/
 
 # Vector store
 chroma_langchain_db/
+.index_manifest.json
 
 # System
 .DS_Store
+
